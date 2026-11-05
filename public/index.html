@@ -161,7 +161,8 @@ async function loadJobs(){
   const {data, error} = await supabaseClient
   .from('jobs')
   .select('*')
-  .or('deadline.gte.${today},deadline.is.null')
+  .or(`deadline.gte.${today},deadline.is.null`)
+  .lt('report_count', 3)
   .order('created_at',{ascending:false})
 
   if(error){ document.getElementById('jobsList').innerHTML = '<div class="empty">Error loading jobs: '+error.message+'<br>Check your Supabase URL/Key.</div>'; return; }
@@ -182,9 +183,10 @@ function renderJobs(){
   const today = new Date().toISOString().split('T')[0];
   const filtered = allJobs.filter(j=>{
     const matchesSearch = (j.title+''+j.copmany+''+j.location+''+j.level).toLowerCase().includes(q);
-    const notExpired = !j.deadline||j.deadline>=today;
-    return matchesSearch && notExpired;
-  })
+    const notExpired = !j.deadline || j.deadline >= today;
+    const notReported = (j.report_count || 0) < 3;
+    return matchesSearch && notExpired && notReported;
+  });
   document.getElementById('jobCount').textContent = filtered.length;
   if(filtered.length===0){ list.innerHTML='<div class="empty">No jobs yet. Be the first to post!</div>'; return; }
   list.innerHTML = filtered.map(j => {
@@ -203,6 +205,7 @@ function renderJobs(){
       <small style="margin-top:8px">📅 Deadline: ${j.deadline || 'Not set'} ${j.start_date ? '• Start: '+j.start_date : ''}</small>
       <p style="font-size:14px;color:#333;margin:10px 0;">${j.description || ''}</p>
       ${applyBtn}
+      <button onclick="reportJob(${j.id}, '${j.title.replace(/'/g,"")}')" style="width:100%;margin-top:8px;background:none;border:none;color:#dc3545;font-size:13px;cursor:pointer;padding:8px">⚠️ Report this job - Scam / Fake</button>
     </div>`;
   }).join('');
 }
@@ -233,6 +236,39 @@ async function postJob(){
   setTimeout(()=>document.getElementById('postStatus').textContent='',3000);
   loadJobs();
   document.getElementById('jobsList').scrollIntoView({behavior:'smooth'});
+}
+async function reportJob(jobId, jobTitle){
+  const reason = prompt(`Why are you reporting "${jobTitle}"?\n\nType:\n1 = Asking for money\n2 = Fake job / No such job\n3 = Wrong info / Wrong salary\n4 = Other`);
+  if(!reason) return;
+
+  const reasons = {
+    '1': 'Asking for money',
+    '2': 'Fake job',
+    '3': 'Wrong info',
+    '4': 'Other'
+  };
+  const reasonText = reasons[reason] || 'Other: ' + reason;
+
+  if(!confirm(`Report this job as: ${reasonText}?\n\nIt will be hidden from you and reviewed.`)) return;
+
+  // 1. Save report
+  const { error } = await supabaseClient.from('job_reports').insert([{job_id: jobId, reason: reasonText}]);
+  if(error){ alert('Error reporting: ' + error.message); return; }
+
+  // 2. Hide it from this user instantly
+  allJobs = allJobs.filter(j => j.id !== jobId);
+  renderJobs();
+
+  // 3. Increase report count - if 3+ reports, hide for everyone
+  const { data: jobData } = await supabaseClient.from('jobs').select('report_count').eq('id', jobId).single();
+  const newCount = (jobData?.report_count || 0) + 1;
+  await supabaseClient.from('jobs').update({report_count: newCount}).eq('id', jobId);
+
+  if(newCount >= 3){
+    alert('Thank you! 3 people have reported this job, so it is now hidden for everyone and sent for review.');
+  } else {
+    alert('Thank you! Job reported and hidden from you. Our team will review it.');
+  }
 }
 
 function goHome(){ window.scrollTo({top:0,behavior:'smooth'}); setActive('navHome'); }
