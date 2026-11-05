@@ -179,7 +179,12 @@ supabaseClient.channel('jobs-changes').on('postgres_changes', {event:'INSERT', s
 function renderJobs(){
   const q = document.getElementById('searchInput').value.toLowerCase();
   const list = document.getElementById('jobsList');
-  const filtered = allJobs.filter(j => (j.title+' '+j.company+' '+j.location+' '+j.level).toLowerCase().includes(q));
+  const today = new Date().toISOString().split('T')[0];
+  const filtered = allJobs.filter(j=>{
+    const matchesSearch = (j.title+''+j.copmany+''+j.location+''+j.level).toLowerCase().includes(q);
+    const notExpired = !j.deadline||j.deadline>=today;
+    return matchesSearch && notExpired;
+  })
   document.getElementById('jobCount').textContent = filtered.length;
   if(filtered.length===0){ list.innerHTML='<div class="empty">No jobs yet. Be the first to post!</div>'; return; }
   list.innerHTML = filtered.map(j => {
