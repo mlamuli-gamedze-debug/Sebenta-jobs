@@ -157,7 +157,13 @@ function toggleContact(){
 }
 
 async function loadJobs(){
-  const { data, error } = await supabaseClient.from('jobs').select('*').order('created_at', {ascending:false});
+  const today = new Date().toISOString().split('T')[0];
+  const {data, error} = await supabaseClient
+  .from('jobs')
+  .select('*')
+  .or('deadline.gte.${today},deadline.is.null')
+  .order('created_at',{ascending:false})
+
   if(error){ document.getElementById('jobsList').innerHTML = '<div class="empty">Error loading jobs: '+error.message+'<br>Check your Supabase URL/Key.</div>'; return; }
   allJobs = data || [];
   renderJobs();
