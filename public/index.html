@@ -309,12 +309,42 @@ function setupLiveValidation(){
 }
 setupLiveValidation();
 
+// SALARY VALIDATION - Eswatini Emalangeni Only
+function validateSalary(raw){
+  if(!raw) return {valid:true, formatted:''};
+  let s = raw.trim().toLowerCase();
+  if(s.includes('negotiable') || s.includes('to discuss')) return {valid:true, formatted:'Negotiable'};
+  
+  let numbers = s.match(/\d+/g);
+  if(!numbers) return {valid:false, msg:'Salary must have numbers. Example: E2500 or 2500'};
+  
+  let nums = numbers.map(n => parseInt(n));
+  for(let n of nums){
+    if(n < 500) return {valid:false, msg:'E'+n+' is too low. Minimum E500'};
+    if(n > 100000) return {valid:false, msg:'E'+n+' is too high'};
+  }
+  
+  let formatted = '';
+  if(nums.length === 1) formatted = 'E' + nums[0].toLocaleString('en-US');
+  else formatted = 'E' + nums[0].toLocaleString('en-US') + ' - E' + nums[1].toLocaleString('en-US');
+  
+  if(s.includes('week')) formatted += ' / week';
+  else if(s.includes('day')) formatted += ' / day';
+  else if(s.includes('hour')) formatted += ' / hour';
+  else formatted += ' / month';
+  
+  return {valid:true, formatted};
+}
+
 async function postJob(){
   const title=document.getElementById('jobTitle').value.trim();
   const company=document.getElementById('company').value.trim();
   const level=document.getElementById('level').value;
   const location=document.getElementById('location').value;
   const salary=document.getElementById('salary').value.trim();
+  const salaryCheck = validateSalary(salary);
+if(!salaryCheck.valid){ alert('❌ Salary Error: ' + salaryCheck.msg); return; }
+const finalSalary = salaryCheck.formatted;
   const deadline=document.getElementById('deadline').value || null;
   const start_date=document.getElementById('startDate').value || null;
   const contact_method=document.querySelector('input[name="contactMethod"]:checked').value;
@@ -351,7 +381,7 @@ async function postJob(){
     }
   }
   document.getElementById('postStatus').textContent='Posting...';
-    const { error } = await supabaseClient.from('jobs').insert([{title,company,level,location,salary,deadline,start_date,contact_method,phone:finalPhone,email:finalEmail,portal_link:finalPortal,description}]);
+    const { error } = await supabaseClient.from('jobs').insert([{title,company,level,location,salary: finalSalary,deadline,start_date,contact_method,phone:finalPhone,email:finalEmail,portal_link:finalPortal,description}]);
   if(error){ alert('Error: '+error.message); document.getElementById('postStatus').textContent=''; return; }
   ['jobTitle','company','salary','phone','email','portalLink','desc'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('level').value=''; document.getElementById('location').value=''; document.getElementById('deadline').value=''; document.getElementById('startDate').value='';
