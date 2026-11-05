@@ -45,26 +45,25 @@
 </style>
 </head>
 <body>
-<!-- ============ FLASH / SPLASH SCREEN ============ -->
-<div id="splash" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#007bff;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center">
+<div id="splash" style="position:fixed;inset:0;background:#007bff;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center">
   <div style="font-size:60px">🇸🇿</div>
-  <h1 style="margin:10px 0 5px;font-size:32px;letter-spacing:1px">Sebenta Jobs</h1>
-  <p style="margin:0;font-size:15px;opacity:0.9">Find Real Jobs in Eswatini</p>
-  <div style="margin-top:20px;width:120px;height:4px;background:rgba(255,255,255,0.3);border-radius:10px;overflow:hidden">
-    <div id="splashBar" style="width:0%;height:100%;background:#fff;transition:width 1.8s"></div>
-  </div>
+  <h1 style="margin:10px 0 5px;font-size:32px">Sebenta Jobs</h1>
+  <p style="margin:0;font-size:15px">Find Real Jobs in Eswatini</p>
   <p style="position:absolute;bottom:25px;font-size:12px;opacity:0.8">Developed by Mlay Technologies</p>
 </div>
 
 <script>
-  // Animate bar + hide splash after 2 seconds
-  setTimeout(()=>{ document.getElementById('splashBar').style.width='100%'; }, 100);
-  setTimeout(()=>{ 
-    const s = document.getElementById('splash');
-    s.style.transition='opacity 0.5s';
-    s.style.opacity='0';
-    setTimeout(()=>{ s.style.display='none'; }, 500);
-  }, 2500);
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      var s = document.getElementById('splash');
+      if(s){ s.style.transition='opacity 0.5s'; s.style.opacity='0'; setTimeout(function(){ s.style.display='none'; }, 500); }
+    }, 2000);
+  });
+  // Backup - if load event fails, still hide after 3 sec
+  setTimeout(function(){
+    var s = document.getElementById('splash');
+    if(s && s.style.display !== 'none'){ s.style.display='none'; }
+  }, 3500);
 </script>
 <header>
   <div class="logo"><div class="logo-icon">S</div><div><b>Sebenta Jobs</b><br><span>Find work in Eswatini</span></div></div>
