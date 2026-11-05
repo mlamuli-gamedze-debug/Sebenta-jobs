@@ -209,6 +209,86 @@ function renderJobs(){
     </div>`;
   }).join('');
 }
+// ============ VALIDATION - ANTI SCAM ============
+
+function cleanPhone(raw){
+  if(!raw) return '';
+  let p = raw.replace(/[\s\-\(\)\+]/g, ''); // remove spaces, -, (, ), +
+  if(p.startsWith('268')) p = p.slice(3); // 26876000000 -> 76000000
+  if(p.startsWith('00268')) p = p.slice(5);
+  return p;
+}
+
+function isValidEswatiniPhone(raw){
+  const p = cleanPhone(raw);
+  // Must be exactly 8 digits
+  if(!/^\d{8}$/.test(p)) return {valid:false, msg:'WhatsApp must be 8 digits, e.g. 76000000'};
+  // Must start with 76,77,78,79 (Eswatini MTN / Eswatini Mobile)
+  if(!/^(76|77|78|79)/.test(p)) return {valid:false, msg:'That is not an Eswatini number. Must start with 76, 77, 78 or 79'};
+  // Block fake numbers like 76000000, 77777777, 76123456 is okay but 76000000 is fake
+  if(/^(\d)\1{7}$/.test(p)) return {valid:false, msg:'That looks like a fake number. Please enter your real WhatsApp.'};
+  if(p === '76000000' || p === '77000000' || p === '78000000' || p === '79000000') return {valid:false, msg:'That is a test number. Enter your real number.'};
+  return {valid:true, phone:p};
+}
+
+const DISPOSABLE_DOMAINS = ['tempmail.com','10minutemail.com','guerrillamail.com','mailinator.com','yopmail.com','temp-mail.org','throwawaymail.com','getnada.com','fakeinbox.com','trashmail.com','sharklasers.com','mintemail.com'];
+
+function isValidEmail(email){
+  email = (email||'').trim().toLowerCase();
+  if(!email) return {valid:false, msg:'Please enter an email'};
+  // Real format check
+  const re = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+  if(!re.test(email)) return {valid:false, msg:'Email is not valid. Example: jobs@company.co.sz'};
+  const domain = email.split('@')[1];
+  if(DISPOSABLE_DOMAINS.includes(domain)) return {valid:false, msg:'Temp / disposable emails are not allowed. Use your real company email.'};
+  if(domain.startsWith('.') || domain.endsWith('.') || domain.includes('..')) return {valid:false, msg:'Email domain is not valid'};
+  // Block common typos
+  if(domain === 'gmail.con' || domain === 'yahoo.con' || domain === 'hotmail.con') return {valid:false, msg:'Did you mean .com? Check your email spelling.'};
+  return {valid:true, email};
+}
+
+function isValidPortal(link){
+  link = (link||'').trim();
+  if(!link) return {valid:false, msg:'Please enter a portal link'};
+  if(link.includes(' ')) return {valid:false, msg:'Portal link cannot have spaces'};
+  if(!link.startsWith('https://') && !link.startsWith('http://')){
+    return {valid:false, msg:'Portal link must start with https://  e.g. https://company.com/apply'};
+  }
+  if(link.startsWith('http://')) return {valid:false, msg:'Portal must use https:// (secure) not http://'};
+  try{
+    const u = new URL(link);
+    if(!u.hostname.includes('.')) return {valid:false, msg:'Portal link must have a real domain, e.g. company.com'};
+    if(u.hostname === 'localhost' || u.hostname.includes('127.0.0.1')) return {valid:false, msg:'Localhost links are not allowed'};
+    if(u.hostname.includes('wa.me') || u.hostname.includes('whatsapp.com')) return {valid:false, msg:'That is a WhatsApp link. Choose WhatsApp method instead.'};
+    if(u.hostname.includes('facebook.com') && link.length < 25) return {valid:false, msg:'Please paste the full Facebook link'};
+    return {valid:true, link};
+  }catch(e){
+    return {valid:false, msg:'Portal link is not valid. Example: https://company.com/apply'};
+  }
+}
+
+// Live check - shows green/red while typing
+function setupLiveValidation(){
+  const phoneEl = document.getElementById('phone');
+  const emailEl = document.getElementById('email');
+  const portalEl = document.getElementById('portalLink');
+  if(phoneEl) phoneEl.addEventListener('input', () => {
+    const r = isValidEswatiniPhone(phoneEl.value);
+    phoneEl.style.borderColor = phoneEl.value ? (r.valid ? '#28a745' : '#dc3545') : '#ddd';
+    phoneEl.title = r.valid ? '✅ Valid Eswatini number' : r.msg;
+  });
+  if(emailEl) emailEl.addEventListener('input', () => {
+    const r = isValidEmail(emailEl.value);
+    emailEl.style.borderColor = emailEl.value ? (r.valid ? '#28a745' : '#dc3545') : '#ddd';
+    emailEl.title = r.valid ? '✅ Valid email' : r.msg;
+  });
+  if(portalEl) portalEl.addEventListener('input', () => {
+    const r = isValidPortal(portalEl.value);
+    portalEl.style.borderColor = portalEl.value ? (r.valid ? '#28a745' : '#dc3545') : '#ddd';
+    portalEl.title = r.valid ? '✅ Valid link' : r.msg;
+  });
+}
+setupLiveValidation();
 
 async function postJob(){
   const title=document.getElementById('jobTitle').value.trim();
@@ -224,11 +304,35 @@ async function postJob(){
   const portal_link=document.getElementById('portalLink').value.trim();
   const description=document.getElementById('desc').value.trim();
   if(!title||!company||!level||!location||!deadline){ alert('Please fill Title, Company, Qualification, Location and Deadline.'); return; }
-  if(contact_method==='whatsapp' && !phone){ alert('Please enter WhatsApp number.'); return; }
-  if(contact_method==='email' && !email){ alert('Please enter Email.'); return; }
-  if(contact_method==='portal' && !portal_link){ alert('Please enter Portal link.'); return; }
+    // --- STRICT VALIDATION ---
+  let finalPhone = '', finalEmail = '', finalPortal = '';
+  if(contact_method==='whatsapp'){
+    const check = isValidEswatiniPhone(phone);
+    if(!check.valid){ alert('❌ WhatsApp Error: ' + check.msg); document.getElementById('phone').focus(); return; }
+    finalPhone = check.phone;
+    // Extra proof: ask employer to confirm
+    if(!confirm(`We will send applicants to WhatsApp: +268 ${finalPhone}\n\nIs this correct?`)) return;
+  }
+  if(contact_method==='email'){
+    const check = isValidEmail(email);
+    if(!check.valid){ alert('❌ Email Error: ' + check.msg); document.getElementById('email').focus(); return; }
+    finalEmail = check.email;
+    if(!confirm(`Applicants will email: ${finalEmail}\n\nIs this correct?`)) return;
+  }
+  if(contact_method==='portal'){
+    const check = isValidPortal(portal_link);
+    if(!check.valid){ alert('❌ Portal Error: ' + check.msg); document.getElementById('portalLink').focus(); return; }
+    finalPortal = check.link;
+    // Try to check if link actually loads (best effort)
+    try{
+      const res = await fetch(finalPortal, {method:'HEAD', mode:'no-cors'});
+      // no-cors always looks ok, so we just check it didn't crash
+    }catch(e){
+      if(!confirm(`We could not reach ${finalPortal}.\nAre you sure this link works? Press OK to post anyway.`)) return;
+    }
+  }
   document.getElementById('postStatus').textContent='Posting...';
-  const { error } = await supabaseClient.from('jobs').insert([{title,company,level,location,salary,deadline,start_date,contact_method,phone,email,portal_link,description}]);
+    const { error } = await supabaseClient.from('jobs').insert([{title,company,level,location,salary,deadline,start_date,contact_method,phone:finalPhone,email:finalEmail,portal_link:finalPortal,description}]);
   if(error){ alert('Error: '+error.message); document.getElementById('postStatus').textContent=''; return; }
   ['jobTitle','company','salary','phone','email','portalLink','desc'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('level').value=''; document.getElementById('location').value=''; document.getElementById('deadline').value=''; document.getElementById('startDate').value='';
