@@ -386,5 +386,38 @@ window.addEventListener('beforeinstallprompt', (e) => { deferredPrompt=e; docume
 document.getElementById('installBtn').addEventListener('click', async () => { if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; document.getElementById('installBtn').style.display='none'; }});
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js'); }
 </script>
+<!-- ============ FOOTER ============ -->
+<footer style="margin-top:40px;background:#111;color:#fff;padding:30px 20px 20px;text-align:center;border-top:4px solid #007bff">
+  <div style="max-width:900px;margin:0 auto">
+    <h3 style="margin:0 0 8px;font-size:22px">Sebenta Jobs 🇸🇿</h3>
+    <p style="margin:0 0 15px;color:#ccc;font-size:14px;line-height:1.6">Find real jobs in Eswatini. No fees. No scams.<br>Jobs in Manzini • Mbabane • Matsapha • Nhlangano • Siteki • Piggs Peak</p>
+
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:15px 0">
+      <a href="#" onclick="goHome();return false;" style="color:#fff;text-decoration:none;background:#007bff;padding:8px 16px;border-radius:20px;font-size:13px">🏠 Home</a>
+      <a href="#" onclick="showPostJob();return false;" style="color:#fff;text-decoration:none;background:#28a745;padding:8px 16px;border-radius:20px;font-size:13px">+ Post a Job</a>
+      <a href="https://wa.me/26876000000?text=Hi%20Sebenta%20Jobs,%20I%20need%20help" target="_blank" style="color:#fff;text-decoration:none;background:#25D366;padding:8px 16px;border-radius:20px;font-size:13px">💬 WhatsApp Us</a>
+    </div>
+
+    <div style="background:#ff0000; background:rgba(255,193,7,0.15);border:1px solid #ffc107;border-radius:10px;padding:12px;margin:15px 0">
+      <p style="margin:0;color:#ffc107;font-weight:bold;font-size:14px">⚠️ NEVER PAY TO GET A JOB</p>
+      <p style="margin:5px 0 0;color:#ddd;font-size:13px">If anyone asks you for money for uniform, training or a job, it is a SCAM. Report it immediately using the ⚠️ Report button on the job.</p>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:20px;margin:15px 0;font-size:13px;color:#aaa">
+      <span onclick="alert('About Sebenta Jobs:\n\nWe connect job seekers in Eswatini with real employers. All jobs are checked. We never charge job seekers.')" style="cursor:pointer;text-decoration:underline">About</span>
+      <span onclick="alert('Safety Tips:\n\n1. Never pay for a job\n2. Meet in a public place\n3. Check the company name\n4. Never send your ID / bank details on WhatsApp first')" style="cursor:pointer;text-decoration:underline">Safety Tips</span>
+      <span onclick="alert('Contact:\n\nWhatsApp: +268 76000000\nEmail: hello@sebentajobs.co.sz\nLocation: Matsapha, Eswatini')" style="cursor:pointer;text-decoration:underline">Contact</span>
+      <span onclick="alert('Terms:\n\n- Job seekers: Free forever\n- Employers: Post real jobs only\n- No asking for money\n- We can remove any job')" style="cursor:pointer;text-decoration:underline">Terms</span>
+    </div>
+
+    <hr style="border:0;border-top:1px solid #333;margin:15px 0">
+    <p style="margin:0;color:#888;font-size:12px">© 2026 Sebenta Jobs • Made in Eswatini 🇸🇿 • All Rights Reserved<br><span id="footerDate"></span></p>
+  </div>
+</footer>
+
+<script>
+  // Show today's date in footer
+  document.getElementById('footerDate').textContent = 'Today: ' + new Date().toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+</script>
 </body>
 </html>
