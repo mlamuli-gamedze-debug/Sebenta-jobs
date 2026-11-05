@@ -4,47 +4,50 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sebenta Jobs - Find Work in Eswatini</title>
-<meta name="description" content="Find work in Eswatini. Jobs for every level, from house helper to manager.">
 <meta name="theme-color" content="#007bff">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  body{margin:0;background:#eaf4ff;color:#111}
+  body{margin:0;background:#eaf4ff;color:#111;padding-bottom:80px}
   header{background:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;box-shadow:0 2px 10px rgba(0,0,0,.06)}
   .logo{display:flex;align-items:center;gap:10px}
   .logo-icon{width:42px;height:42px;background:#0056b3;color:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900}
-  .logo b{font-size:19px;line-height:1}
-  .logo span{font-size:12px;color:#666}
+  .logo b{font-size:19px;line-height:1}.logo span{font-size:12px;color:#666}
   .post-btn{background:#007bff;color:#fff;border:none;padding:10px 16px;border-radius:20px;font-weight:700;cursor:pointer}
   .hero{background:#007bff;color:#fff;padding:22px 16px 24px;border-radius:0 0 24px 24px}
   .hero h1{font-size:24px;line-height:1.2;margin:0 0 14px}
   .hero input{width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;outline:none}
   #installBtn{display:none;width:100%;padding:14px;background:#fff;color:#007bff;border:none;border-radius:12px;font-weight:800;font-size:16px;margin-top:12px;cursor:pointer}
   .card{background:#fff;margin:16px;padding:18px;border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
-  .card h2{margin:0;color:#007bff;font-size:20px}
-  .card p{color:#666;font-size:13px;margin:6px 0 14px}
-  input,select,textarea{width:100%;padding:13px;margin-bottom:10px;border:1px solid #ddd;border-radius:10px;font-size:15px;background:#f8f9fa}
+  .card h2{margin:0;color:#007bff;font-size:20px}.card p{color:#666;font-size:13px;margin:6px 0 14px}
+  label{font-size:13px;font-weight:700;color:#333;display:block;margin:12px 0 5px}
+  input,select,textarea{width:100%;padding:13px;margin-bottom:2px;border:1px solid #ddd;border-radius:10px;font-size:15px;background:#f8f9fa}
   textarea{resize:vertical;min-height:70px}
-  .submit-btn{width:100%;background:#007bff;color:#fff;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:16px;cursor:pointer}
+  .submit-btn{width:100%;background:#007bff;color:#fff;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:16px;cursor:pointer;margin-top:14px}
   .job{background:#fff;margin:0 16px 12px;padding:16px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
-  .job b{font-size:17px}
-  .job small{color:#666;display:block;margin:4px 0}
+  .job b{font-size:17px}.job small{color:#666;display:block;margin:4px 0}
   .tag{display:inline-block;background:#eaf4ff;color:#007bff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;margin-right:6px}
-  .apply-btn{background:#28a745;color:#fff;border:none;padding:10px 16px;border-radius:10px;font-weight:700;margin-top:10px;cursor:pointer}
-  .delete-btn{background:none;border:none;color:#999;float:right;cursor:pointer}
+  .apply-btn{background:#28a745;color:#fff;border:none;padding:10px 16px;border-radius:10px;font-weight:700;margin-top:10px;cursor:pointer;width:100%}
+  .apply-btn.email{background:#007bff}.apply-btn.portal{background:#6f42c1}
   .section-title{padding:0 16px;font-size:18px;font-weight:800}
   .empty{text-align:center;color:#888;padding:30px 16px}
+  .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;justify-content:space-around;padding:10px 0 14px;box-shadow:0 -2px 10px rgba(0,0,0,.1);z-index:100}
+  .bottom-nav button{background:none;border:none;font-size:13px;color:#666;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+  .bottom-nav button.active{color:#007bff;font-weight:800}.bottom-nav span{font-size:20px}
+  .contact-choice{display:flex;gap:8px}
+  .contact-choice label{flex:1;text-align:center;border:2px solid #ddd;border-radius:10px;padding:12px 4px;cursor:pointer;font-size:14px;margin:0}
+  .contact-choice input{display:none}
+  .contact-choice label:has(input:checked){border-color:#007bff;background:#eaf4ff}
+  .contact-choice input:checked + span{font-weight:800;color:#007bff}
+  .two-col{display:flex;gap:10px}.two-col>div{flex:1}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">
-    <div class="logo-icon">S</div>
-    <div><b>Sebenta Jobs</b><br><span>Find work in Eswatini</span></div>
-  </div>
+  <div class="logo"><div class="logo-icon">S</div><div><b>Sebenta Jobs</b><br><span>Find work in Eswatini</span></div></div>
   <button class="post-btn" onclick="document.getElementById('postForm').scrollIntoView({behavior:'smooth'})">+ Post</button>
 </header>
 
@@ -52,14 +55,19 @@
   <h1>Jobs for every level, from house helper to manager</h1>
   <input id="searchInput" type="text" placeholder="Search jobs in Manzini, Mbabane..." oninput="renderJobs()">
   <button id="installBtn">📲 Install Sebenta Jobs App - FREE</button>
-  <p id="installHint" style="font-size:12px;opacity:.9;margin:8px 0 0;">On Android: Tap ⋮ → Install and create shortcut → Install. On iPhone: Share → Add to Home Screen.</p>
 </div>
 
 <div class="card" id="postForm">
   <h2>Post a Job - Free</h2>
-  <p>Fill this in 2 minutes. It will appear immediately.</p>
-  <input id="jobTitle" placeholder="Job Title - e.g. House Helper">
-  <input id="company" placeholder="Company / Household Name">
+  <p>Fill this in 2 minutes. It will appear for everyone instantly.</p>
+
+  <label>Job Title *</label>
+  <input id="jobTitle" placeholder="e.g. House Helper">
+
+  <label>Company / Household *</label>
+  <input id="company" placeholder="e.g. Private Household - Manzini">
+
+  <label>Qualification Level *</label>
   <select id="level">
     <option value="">Select Qualification Level</option>
     <option>No Qualification Needed</option>
@@ -69,96 +77,163 @@
     <option>Diploma / Certificate</option>
     <option>Degree</option>
   </select>
-  <input id="location" placeholder="Location - e.g. Manzini, Matsapha">
-  <input id="salary" placeholder="Salary - e.g. E2500 / month (optional)">
-  <input id="phone" placeholder="WhatsApp / Phone Number">
-  <textarea id="desc" placeholder="Job Description - duties, hours, etc."></textarea>
+
+  <label>Location *</label>
+  <select id="location">
+    <option value="">Select Location</option>
+    <option>Manzini</option>
+    <option>Mbabane</option>
+    <option>Matsapha</option>
+    <option>Nhlangano</option>
+    <option>Siteki</option>
+    <option>Piggs Peak</option>
+    <option>Big Bend</option>
+    <option>Malkerns</option>
+    <option>Ezulwini</option>
+    <option>Lobamba</option>
+    <option>Ngwenya</option>
+    <option>Other / Work From Home</option>
+  </select>
+
+  <label>Salary</label>
+  <input id="salary" placeholder="e.g. E2500 / month">
+
+  <div class="two-col">
+    <div><label>📅 Application Deadline *</label><input id="deadline" type="date"></div>
+    <div><label>📅 Job Start Date</label><input id="startDate" type="date"></div>
+  </div>
+
+  <label>How should people apply? *</label>
+  <div class="contact-choice">
+    <label><input type="radio" name="contactMethod" value="whatsapp" checked onchange="toggleContact()"><span>💬 WhatsApp</span></label>
+    <label><input type="radio" name="contactMethod" value="email" onchange="toggleContact()"><span>📧 Email</span></label>
+    <label><input type="radio" name="contactMethod" value="portal" onchange="toggleContact()"><span>🌐 Portal</span></label>
+  </div>
+
+  <div id="whatsappField">
+    <label>WhatsApp / Phone Number *</label>
+    <input id="phone" placeholder="e.g. 76000000">
+  </div>
+  <div id="emailField" style="display:none">
+    <label>Email Address *</label>
+    <input id="email" type="email" placeholder="e.g. jobs@company.co.sz">
+  </div>
+  <div id="portalField" style="display:none">
+    <label>Portal / Application Link *</label>
+    <input id="portalLink" placeholder="e.g. https://company.com/apply">
+    <p style="font-size:12px;margin:4px 0">Applicants will click this link to apply on your website / Google Form.</p>
+  </div>
+
+  <label>Job Description</label>
+  <textarea id="desc" placeholder="Duties, hours, requirements..."></textarea>
+
   <button class="submit-btn" onclick="postJob()">Post Job Now →</button>
+  <p id="postStatus" style="text-align:center;font-weight:700"></p>
 </div>
 
 <h3 class="section-title">Latest Jobs (<span id="jobCount">0</span>)</h3>
-<div id="jobsList"></div>
+<div id="jobsList"><div class="empty">Loading jobs...</div></div>
+
+<div class="bottom-nav">
+  <button onclick="goHome()" id="navHome" class="active"><span>🏠</span>Home</button>
+  <button onclick="goJobs()" id="navJobs"><span>💼</span>Jobs</button>
+  <button onclick="goPost()" id="navPost"><span>➕</span>Post Job</button>
+  <button onclick="goBack()"><span>⬅️</span>Back</button>
+</div>
 
 <script>
-// --- JOBS DATA ---
-let jobs = JSON.parse(localStorage.getItem('sebenta_jobs') || '[]');
-if(jobs.length === 0){
-  jobs = [
-    {title:"House Helper", company:"Private Household - Manzini", level:"No Qualification Needed", location:"Manzini", salary:"E2500 / month", phone:"76000000", desc:"Cleaning, cooking, laundry. Monday - Friday, 8am - 4pm."},
-    {title:"Shop Assistant", company:"Matsapha Supermarket", level:"Form 5 / Matric", location:"Matsapha", salary:"E3500 / month", phone:"76111111", desc:"Serving customers, stocking shelves. Must be friendly and honest."},
-    {title:"Driver", company:"Delivery Company", level:"Form 3 / JC", location:"Mbabane", salary:"E4500 / month", phone:"76222222", desc:"Delivery driver. Must have valid license. Code 8."}
-  ];
-  localStorage.setItem('sebenta_jobs', JSON.stringify(jobs));
+// --- PASTE YOUR SUPABASE DETAILS HERE ---
+const SUPABASE_URL = "https://xinnncwopyneuvdrrxil.supabase.co"; // e.g. https://xyz.supabase.co
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhpbm5uY3dvcHluZXV2ZHJyeGlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM4NzUwNjIsImV4cCI6MjEwOTQ1MTA2Mn0.eahKMBuHSmp7945Ty3zsvPYm7xrYUGJoqCrpEayEko0"; // starts with eyJ...
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let allJobs = [];
+
+function toggleContact(){
+  const m = document.querySelector('input[name="contactMethod"]:checked').value;
+  document.getElementById('whatsappField').style.display = m==='whatsapp' ? 'block' : 'none';
+  document.getElementById('emailField').style.display = m==='email' ? 'block' : 'none';
+  document.getElementById('portalField').style.display = m==='portal' ? 'block' : 'none';
 }
+
+async function loadJobs(){
+  const { data, error } = await supabaseClient.from('jobs').select('*').order('created_at', {ascending:false});
+  if(error){ document.getElementById('jobsList').innerHTML = '<div class="empty">Error loading jobs: '+error.message+'<br>Check your Supabase URL/Key.</div>'; return; }
+  allJobs = data || [];
+  renderJobs();
+}
+loadJobs();
+
+// Realtime: when someone posts, everyone sees it without refresh
+supabaseClient.channel('jobs-changes').on('postgres_changes', {event:'INSERT', schema:'public', table:'jobs'}, payload => {
+  allJobs.unshift(payload.new);
+  renderJobs();
+}).subscribe();
 
 function renderJobs(){
   const q = document.getElementById('searchInput').value.toLowerCase();
   const list = document.getElementById('jobsList');
-  const filtered = jobs.filter(j => (j.title+' '+j.company+' '+j.location+' '+j.level).toLowerCase().includes(q));
+  const filtered = allJobs.filter(j => (j.title+' '+j.company+' '+j.location+' '+j.level).toLowerCase().includes(q));
   document.getElementById('jobCount').textContent = filtered.length;
-  if(filtered.length === 0){
-    list.innerHTML = '<div class="empty">No jobs found.<br>Try a different search or post a job!</div>';
-    return;
-  }
-  list.innerHTML = filtered.map((j, i) => `
-    <div class="job">
-      <button class="delete-btn" onclick="deleteJob(${jobs.indexOf(j)})">✕</button>
+  if(filtered.length===0){ list.innerHTML='<div class="empty">No jobs yet. Be the first to post!</div>'; return; }
+  list.innerHTML = filtered.map(j => {
+    let applyBtn = '';
+    if(j.contact_method==='whatsapp'){
+      applyBtn = `<a href="https://wa.me/268${(j.phone||'').replace(/[^0-9]/g,'').slice(-8)}?text=${encodeURIComponent('Hi, I saw your '+j.title+' job on Sebenta Jobs. I want to apply.')}" target="_blank"><button class="apply-btn">💬 Apply on WhatsApp →</button></a>`;
+    } else if(j.contact_method==='email'){
+      applyBtn = `<a href="mailto:${j.email}?subject=${encodeURIComponent('Application: '+j.title+' - Sebenta Jobs')}&body=${encodeURIComponent('Hi, I saw your job on Sebenta Jobs and I want to apply.')}" ><button class="apply-btn email">📧 Apply by Email →</button></a>`;
+    } else {
+      applyBtn = `<a href="${j.portal_link}" target="_blank"><button class="apply-btn portal">🌐 Apply on Portal →</button></a>`;
+    }
+    return `<div class="job">
       <b>${j.title}</b>
       <small>${j.company} • ${j.location}</small>
       <span class="tag">${j.level}</span> <span class="tag">${j.salary || 'Salary to discuss'}</span>
-      <p style="font-size:14px;color:#333;margin:10px 0;">${j.desc}</p>
-      <a href="https://wa.me/268${j.phone.replace(/[^0-9]/g,'').slice(-8)}?text=Hi, I saw your ${encodeURIComponent(j.title)} job on Sebenta Jobs. I want to apply." target="_blank"><button class="apply-btn">Apply on WhatsApp →</button></a>
-    </div>
-  `).join('');
+      <small style="margin-top:8px">📅 Deadline: ${j.deadline || 'Not set'} ${j.start_date ? '• Start: '+j.start_date : ''}</small>
+      <p style="font-size:14px;color:#333;margin:10px 0;">${j.description || ''}</p>
+      ${applyBtn}
+    </div>`;
+  }).join('');
 }
 
-function postJob(){
-  const title = document.getElementById('jobTitle').value.trim();
-  const company = document.getElementById('company').value.trim();
-  const level = document.getElementById('level').value;
-  const location = document.getElementById('location').value.trim();
-  const salary = document.getElementById('salary').value.trim();
-  const phone = document.getElementById('phone').value.trim();
-  const desc = document.getElementById('desc').value.trim();
-  if(!title || !company || !level || !location || !phone){
-    alert('Please fill Job Title, Company, Qualification, Location and Phone.');
-    return;
-  }
-  jobs.unshift({title, company, level, location, salary, phone, desc: desc || 'Contact for more details.'});
-  localStorage.setItem('sebenta_jobs', JSON.stringify(jobs));
-  ['jobTitle','company','location','salary','phone','desc'].forEach(id => document.getElementById(id).value='');
-  document.getElementById('level').value='';
-  renderJobs();
-  alert('Job posted! It is now live.');
+async function postJob(){
+  const title=document.getElementById('jobTitle').value.trim();
+  const company=document.getElementById('company').value.trim();
+  const level=document.getElementById('level').value;
+  const location=document.getElementById('location').value;
+  const salary=document.getElementById('salary').value.trim();
+  const deadline=document.getElementById('deadline').value || null;
+  const start_date=document.getElementById('startDate').value || null;
+  const contact_method=document.querySelector('input[name="contactMethod"]:checked').value;
+  const phone=document.getElementById('phone').value.trim();
+  const email=document.getElementById('email').value.trim();
+  const portal_link=document.getElementById('portalLink').value.trim();
+  const description=document.getElementById('desc').value.trim();
+  if(!title||!company||!level||!location||!deadline){ alert('Please fill Title, Company, Qualification, Location and Deadline.'); return; }
+  if(contact_method==='whatsapp' && !phone){ alert('Please enter WhatsApp number.'); return; }
+  if(contact_method==='email' && !email){ alert('Please enter Email.'); return; }
+  if(contact_method==='portal' && !portal_link){ alert('Please enter Portal link.'); return; }
+  document.getElementById('postStatus').textContent='Posting...';
+  const { error } = await supabaseClient.from('jobs').insert([{title,company,level,location,salary,deadline,start_date,contact_method,phone,email,portal_link,description}]);
+  if(error){ alert('Error: '+error.message); document.getElementById('postStatus').textContent=''; return; }
+  ['jobTitle','company','salary','phone','email','portalLink','desc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('level').value=''; document.getElementById('location').value=''; document.getElementById('deadline').value=''; document.getElementById('startDate').value='';
+  document.getElementById('postStatus').textContent='✅ Job posted! Everyone can see it now.';
+  setTimeout(()=>document.getElementById('postStatus').textContent='',3000);
+  loadJobs();
   document.getElementById('jobsList').scrollIntoView({behavior:'smooth'});
 }
 
-function deleteJob(idx){
-  if(confirm('Delete this job?')){ jobs.splice(idx,1); localStorage.setItem('sebenta_jobs', JSON.stringify(jobs)); renderJobs(); }
-}
+function goHome(){ window.scrollTo({top:0,behavior:'smooth'}); setActive('navHome'); }
+function goJobs(){ document.getElementById('jobsList').scrollIntoView({behavior:'smooth'}); setActive('navJobs'); }
+function goPost(){ document.getElementById('postForm').scrollIntoView({behavior:'smooth'}); setActive('navPost'); }
+function goBack(){ window.history.back(); }
+function setActive(id){ document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 
-renderJobs();
-
-// --- INSTALL BUTTON ---
 let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  document.getElementById('installBtn').style.display = 'block';
-});
-document.getElementById('installBtn').addEventListener('click', async () => {
-  if(deferredPrompt){
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    document.getElementById('installBtn').style.display = 'none';
-  }
-});
-
-// --- SERVICE WORKER ---
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js');
-}
+window.addEventListener('beforeinstallprompt', (e) => { deferredPrompt=e; document.getElementById('installBtn').style.display='block'; });
+document.getElementById('installBtn').addEventListener('click', async () => { if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; document.getElementById('installBtn').style.display='none'; }});
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js'); }
 </script>
 </body>
 </html>
