@@ -534,9 +534,9 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js'); }
   // ===== APPLY + INBOX SYSTEM - STEP 5 =====
 let currentJobId = null;
 
-function openApplyForm(jobId, jobTitle){
+function openApplyForm(jobId){
   currentJobId = jobId;
-  document.getElementById('applyJobTitle').innerText = jobTitle;
+  document.getElementById('applyJobTitle').innerText = "This Job (ID: " + jobId + ")";
   document.getElementById('applyBox').style.display = 'block';
   document.getElementById('inboxBox').style.display = 'none';
   document.getElementById('applyBox').scrollIntoView({behavior:'smooth'});
@@ -570,7 +570,8 @@ async function submitApplication(){
   }
 }
 
-async function viewApplications(jobId, jobTitle){
+async function viewApplications(jobId){
+  let jobTitle="This Job";
   const code = prompt("Enter your 4-digit Delete Code to view applications for: " + jobTitle);
   if(!code) return;
 
