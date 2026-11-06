@@ -202,8 +202,12 @@ async function deleteJob(jobId){
   
   const { data } = await supabaseClient.from('jobs').select('delete_code').eq('id', jobId).single();
   
-    if(data && String(data.delete_code) === String(code)){
-    await supabaseClient.from('jobs').delete().eq('id', jobId);
+  if(data && String(data.delete_code) === String(code)){
+    const { error } = await supabaseClient.from('jobs').delete().eq('id', jobId);
+    if(error){
+      alert("Delete BLOCKED by Supabase: " + error.message + "\n\nYou need to allow DELETE in Supabase Policies (Fix 2 below).");
+      return;
+    }
     alert("Job deleted!");
     location.reload();
   } else {
