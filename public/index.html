@@ -161,7 +161,7 @@
 </div>
 
 <script>
-// --- PASTE YOUR SUPABASE DETAILS HERE ---
+
 const SUPABASE_URL = "https://xinnncwopyneuvdrrxil.supabase.co"; // e.g. https://xyz.supabase.co
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhpbm5uY3dvcHluZXV2ZHJyeGlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM4NzUwNjIsImV4cCI6MjEwOTQ1MTA2Mn0.eahKMBuHSmp7945Ty3zsvPYm7xrYUGJoqCrpEayEko0"; // starts with eyJ...
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -196,6 +196,21 @@ supabaseClient.channel('jobs-changes').on('postgres_changes', {event:'INSERT', s
   renderJobs();
 }).subscribe();
 
+async function deleteJob(jobId){
+  const code = prompt("Enter your 4-digit Delete Code to delete this job:");
+  if(!code) return;
+  
+  const { data } = await supabaseClient.from('jobs').select('delete_code').eq('id', jobId).single();
+  
+  if(data && data.delete_code === code){
+    await supabaseClient.from('jobs').delete().eq('id', jobId);
+    alert("Job deleted!");
+    location.reload();
+  } else {
+    alert("Wrong code! Only the employer can delete this job.");
+  }
+}
+
 function renderJobs(){
   const q = document.getElementById('searchInput').value.toLowerCase();
   const list = document.getElementById('jobsList');
@@ -218,13 +233,14 @@ function renderJobs(){
       applyBtn = `<a href="${j.portal_link}" target="_blank"><button class="apply-btn portal">🌐 Apply on Portal →</button></a>`;
     }
     return `<div class="job">
-      <b>${j.title}</b>
+      <b>${j.title}${j.is_verified ? '<span style="background:#28a745;color:white;padding:3px 8px;border-radius:10px;font-size:12px;">✅ VERIFIED</span>' : '<span style="background:#ffc107;padding:3px 8px;border-radius:10px;font-size:12px;">⏳ Not Verified</span>'}</b>
       <small>${j.company} • ${j.location}</small>
       <span class="tag">${j.level}</span> <span class="tag">${j.salary || 'Salary to discuss'}</span>
       <small style="margin-top:8px">📅 Deadline: ${j.deadline || 'Not set'} ${j.start_date ? '• Start: '+j.start_date : ''}</small>
       <p style="font-size:14px;color:#333;margin:10px 0;">${j.description || ''}</p>
       ${applyBtn}
       <button onclick="reportJob(${j.id}, '${j.title.replace(/'/g,"")}')" style="width:100%;margin-top:8px;background:none;border:none;color:#dc3545;font-size:13px;cursor:pointer;padding:8px">⚠️ Report this job - Scam / Fake</button>
+      <button onclick="deleteJob('JOB_ID_HERE')">🗑️ Delete Job</button>
     </div>`;
   }).join('');
 }
@@ -337,6 +353,7 @@ function validateSalary(raw){
 }
 
 async function postJob(){
+  
   const title=document.getElementById('jobTitle').value.trim();
   const company=document.getElementById('company').value.trim();
   const level=document.getElementById('level').value;
@@ -381,11 +398,13 @@ const finalSalary = salaryCheck.formatted;
     }
   }
   document.getElementById('postStatus').textContent='Posting...';
-    const { error } = await supabaseClient.from('jobs').insert([{title,company,level,location,salary: finalSalary,deadline,start_date,contact_method,phone:finalPhone,email:finalEmail,portal_link:finalPortal,description}]);
+  const deleteCode = Math.floor(1000+Math.random()*9000).toString();
+  const { error } = await supabaseClient.from('jobs').insert([{title,company,level,location,salary: finalSalary,deadline,start_date,contact_method,phone:finalPhone,email:finalEmail,portal_link:finalPortal,description,delete_code:deleteCode}]);
   if(error){ alert('Error: '+error.message); document.getElementById('postStatus').textContent=''; return; }
   ['jobTitle','company','salary','phone','email','portalLink','desc'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('level').value=''; document.getElementById('location').value=''; document.getElementById('deadline').value=''; document.getElementById('startDate').value='';
   document.getElementById('postStatus').textContent='✅ Job posted! Everyone can see it now.';
+  alert("Your DELETE CODE is: " + deleteCode + "-save it to delete this job later!");
   setTimeout(()=>document.getElementById('postStatus').textContent='',3000);
   loadJobs();
   document.getElementById('jobsList').scrollIntoView({behavior:'smooth'});
@@ -424,6 +443,17 @@ async function reportJob(jobId, jobTitle){
   }
 }
 
+async function sendFeedback(){
+  const name = document.getElementById('fbName').value;
+  const message = document.getElementById('fbMessage').value;
+  const rating = document.getElementById('fbRating').value;
+  if(!message) return alert("Please write a message");
+  
+  const { error } = await supabaseClient.from('feedback').insert([{name, message, rating}]);
+  if(!error){ alert("Thank you! Feedback sent ❤️"); document.getElementById('fbMessage').value=''; }
+  else { alert("Error: " + error.message); }
+}
+
 function goHome(){ window.scrollTo({top:0,behavior:'smooth'}); setActive('navHome'); }
 function goJobs(){ document.getElementById('jobsList').scrollIntoView({behavior:'smooth'}); setActive('navJobs'); }
 function goPost(){ document.getElementById('postForm').scrollIntoView({behavior:'smooth'}); setActive('navPost'); }
@@ -435,6 +465,21 @@ window.addEventListener('beforeinstallprompt', (e) => { deferredPrompt=e; docume
 document.getElementById('installBtn').addEventListener('click', async () => { if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; document.getElementById('installBtn').style.display='none'; }});
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js'); }
 </script>
+
+<div style="padding:20px;background:#f8f9fa;margin-top:20px;border-radius:10px;">
+  <h3>💬 Give Feedback</h3>
+  <input id="fbName" placeholder="Your Name" style="width:100%;padding:10px;margin-bottom:10px;">
+  <textarea id="fbMessage" placeholder="What do you think of Sebenta Jobs? Any problems?" style="width:100%;padding:10px;"></textarea>
+  <select id="fbRating" style="width:100%;padding:10px;margin-top:10px;">
+    <option value="5">⭐⭐⭐⭐⭐ Loved it</option>
+    <option value="4">⭐⭐⭐⭐ Good</option>
+    <option value="3">⭐⭐⭐ Okay</option>
+    <option value="2">⭐⭐ Bad</option>
+    <option value="1">⭐ Terrible</option>
+  </select>
+  <button onclick="sendFeedback()" style="width:100%;padding:12px;background:#007bff;color:white;border:none;border-radius:8px;margin-top:10px;">Send Feedback</button>
+</div>
+
 <!-- ============ FOOTER ============ -->
 <footer style="margin-top:40px;background:#111;color:#fff;padding:30px 20px 20px;text-align:center;border-top:4px solid #007bff">
   <div style="max-width:900px;margin:0 auto">
@@ -450,6 +495,9 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js'); }
     <div style="background:#ff0000; background:rgba(255,193,7,0.15);border:1px solid #ffc107;border-radius:10px;padding:12px;margin:15px 0">
       <p style="margin:0;color:#ffc107;font-weight:bold;font-size:14px">⚠️ NEVER PAY TO GET A JOB</p>
       <p style="margin:5px 0 0;color:#ddd;font-size:13px">If anyone asks you for money for uniform, training or a job, it is a SCAM. Report it immediately using the ⚠️ Report button on the job.</p>
+      <button onclick="document.getElementById('feedbackSection').scrollIntoView({behavior:'smooth'})" style="padding:10px 20px; background:#007bff; color:white; border:none; border-radius:20px;">
+    💬 Give Feedback
+  </button>
     </div>
 
     <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:20px;margin:15px 0;font-size:13px;color:#aaa">
