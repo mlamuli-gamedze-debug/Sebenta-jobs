@@ -202,7 +202,7 @@ async function deleteJob(jobId){
   
   const { data } = await supabaseClient.from('jobs').select('delete_code').eq('id', jobId).single();
   
-  if(data && data.delete_code === code){
+    if(data && String(data.delete_code) === String(code)){
     await supabaseClient.from('jobs').delete().eq('id', jobId);
     alert("Job deleted!");
     location.reload();
@@ -240,7 +240,7 @@ function renderJobs(){
       <p style="font-size:14px;color:#333;margin:10px 0;">${j.description || ''}</p>
       ${applyBtn}
       <button onclick="reportJob(${j.id}, '${j.title.replace(/'/g,"")}')" style="width:100%;margin-top:8px;background:none;border:none;color:#dc3545;font-size:13px;cursor:pointer;padding:8px">⚠️ Report this job - Scam / Fake</button>
-      <button onclick="deleteJob('JOB_ID_HERE')">🗑️ Delete Job</button>
+      <button onclick="deleteJob(${j.id})" style="width:100%;margin-top:8px;background:none;border:none;color:#666;font-size:13px;cursor:pointer;padding:8px">🗑️ Delete Job</button>
     </div>`;
   }).join('');
 }
