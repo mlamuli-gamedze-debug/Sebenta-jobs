@@ -238,7 +238,9 @@ loadJobs();
 
 // Realtime: when someone posts, everyone sees it without refresh
 supabaseClient.channel('jobs-changes').on('postgres_changes', {event:'INSERT', schema:'public', table:'jobs'}, payload => {
-  allJobs.unshift(payload.new);
+  if(!allJobs.some(j => j.id === payload.new.id)){
+    allJobs.unshift(payload.new);
+  }
   renderJobs();
 }).subscribe();
 
@@ -317,7 +319,7 @@ function isValidEswatiniPhone(raw){
   // Must be exactly 8 digits
   if(!/^\d{8}$/.test(p)) return {valid:false, msg:'WhatsApp must be 8 digits, e.g. 76000000'};
   // Must start with 76,77,78,79 (Eswatini MTN / Eswatini Mobile)
-  if(!/^(76|77|78|79)/.test(p)) return {valid:false, msg:'That is not an Eswatini number. Must start with 76, 77, 78 or 79'};
+  if(!/^(76|78|79)/.test(p)) return {valid:false, msg:'That is not an Eswatini number. Must start with 76, 77, 78 or 79'};
   // Block fake numbers like 76000000, 77777777, 76123456 is okay but 76000000 is fake
   if(/^(\d)\1{7}$/.test(p)) return {valid:false, msg:'That looks like a fake number. Please enter your real WhatsApp.'};
   if(p === '76000000' || p === '77000000' || p === '78000000' || p === '79000000') return {valid:false, msg:'That is a test number. Enter your real number.'};
@@ -739,11 +741,12 @@ async function postAdminJob(){
     }]);
     if(error) throw error;
 
+    
     // Show copy for Facebook
     document.getElementById('fbCopyBox').style.display = 'block';
     document.getElementById('fbCopyText').innerText = `${title}\n📍 ${location}\n\n${caption}\n\n👉 Apply in App: https://sebenta-jobs.onrender.com/\n⚠️ NEVER pay for a job.`;
     document.getElementById('adminStatus').textContent = '✅ Posted! Now copy caption to Facebook.';
-    loadJobs();
+  
   }catch(e){ alert("Error: " + e.message); }
 }
 
