@@ -285,8 +285,8 @@ function renderJobs(){
       applyBtn = `<a href="${j.portal_link}" target="_blank"><button class="apply-btn portal">🌐 Apply on Portal →</button></a>`;
     }
     const badge = j.post_type === 'admin' 
-  ? `<span class="admin-badge">✅ Sebenta Verified • From Facebook</span>` 
-  : `<span class="employer-badge">Posted by Employer</span>`;
+  ? `<span class="admin-badge">✅ </span>` 
+  : `<span class="employer-badge"></span>`;
 const imgHtml = j.image_url ? `<img src="${j.image_url}" class="job-img">` : '';
 
 return `<div class="job">
@@ -294,7 +294,7 @@ return `<div class="job">
   <b>${j.title} ${badge}</b>
       <b>${j.title}${j.is_verified ? '<span style="background:#28a745;color:white;padding:3px 8px;border-radius:10px;font-size:12px;">✅ VERIFIED</span>' : '<span style="background:#ffc107;padding:3px 8px;border-radius:10px;font-size:12px;">⏳ Not Verified</span>'}</b>
       <small>${j.company} • ${j.location}</small>
-      <span class="tag">${j.level}</span> <span class="tag">${j.salary || 'Salary to discuss'}</span>
+      <span class="tag">${j.level}</span> <span class="tag">${j.salary || 'See post photo above'}</span>
       <small style="margin-top:8px">📅 Deadline: ${j.deadline || 'Not set'} ${j.start_date ? '• Start: '+j.start_date : ''}</small>
       <p style="font-size:14px;color:#333;margin:10px 0;">${j.description || ''}</p>
       ${j.facebook_link ? `<a href="${j.facebook_link}" target="_blank" style="color:#1877F2;font-size:13px;font-weight:700;">📘 View on Facebook Page →</a>` : ''}
@@ -741,7 +741,7 @@ async function postAdminJob(){
     }]);
     if(error) throw error;
 
-    
+
     // Show copy for Facebook
     document.getElementById('fbCopyBox').style.display = 'block';
     document.getElementById('fbCopyText').innerText = `${title}\n📍 ${location}\n\n${caption}\n\n👉 Apply in App: https://sebenta-jobs.onrender.com/\n⚠️ NEVER pay for a job.`;
