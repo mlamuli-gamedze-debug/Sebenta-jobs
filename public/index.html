@@ -150,6 +150,52 @@
   <p id="postStatus" style="text-align:center;font-weight:700"></p>
 </div>
 
+<!-- ===== ADMIN ONLY - YOU POST FROM FACEBOOK ===== -->
+<div style="text-align:center; margin:10px 16px;">
+  <button onclick="toggleAdmin()" style="background:#111;color:#fff;border:none;padding:10px 18px;border-radius:20px;font-weight:700;cursor:pointer;">🔐 Admin Post</button>
+</div>
+
+<div class="card" id="adminForm" style="display:none; border:2px solid #111;">
+  <h2>🔐 Admin Post - From Facebook</h2>
+  <p>Only you use this. This mirrors your Facebook Page post.</p>
+
+  <label>Upload Photo of Post *</label>
+  <input type="file" id="adminPhoto" accept="image/*" onchange="previewAdminPhoto(event)">
+  <img id="adminPreview" style="width:100%;border-radius:12px;margin-top:10px;display:none;">
+
+  <label>Job Title *</label>
+  <input id="adminTitle" placeholder="e.g. Cashier - Clicks Manzini">
+
+  <label>Company</label>
+  <input id="adminCompany" placeholder="e.g. Clicks">
+
+  <label>Location</label>
+  <select id="adminLocation">
+    <option>Manzini</option><option>Mbabane</option><option>Matsapha</option>
+    <option>Nhlangano</option><option>Siteki</option><option>Piggs Peak</option>
+    <option>Big Bend</option><option>Malkerns</option><option>Ezulwini</option>
+    <option>Other / Work From Home</option>
+  </select>
+
+  <label>Caption - Paste SAME as Facebook *</label>
+  <textarea id="adminCaption" placeholder="Paste your Facebook caption here... Include how to apply, closing date, etc." style="min-height:120px;"></textarea>
+
+  <label>Facebook Post Link (after you post on FB)</label>
+  <input id="adminFBLink" placeholder="https://www.facebook.com/...">
+
+  <label>Application Deadline</label>
+  <input id="adminDeadline" type="date">
+
+  <button class="submit-btn" style="background:#111;" onclick="postAdminJob()">Post as Admin → Appears in App + Copy for FB</button>
+  <p id="adminStatus" style="text-align:center;font-weight:700"></p>
+
+  <div id="fbCopyBox" style="display:none;background:#f0f2f5;padding:12px;border-radius:10px;margin-top:10px;">
+    <b>Copy this for Facebook:</b>
+    <p id="fbCopyText" style="white-space:pre-wrap;font-size:14px;"></p>
+    <button onclick="copyFBText()" style="width:100%;padding:10px;background:#1877F2;color:#fff;border:none;border-radius:8px;font-weight:700;">📋 Copy Facebook Caption</button>
+  </div>
+</div>
+
 <h3 class="section-title">Latest Jobs (<span id="jobCount">0</span>)</h3>
 <div id="jobsList"><div class="empty">Loading jobs...</div></div>
 
@@ -236,12 +282,20 @@ function renderJobs(){
     } else {
       applyBtn = `<a href="${j.portal_link}" target="_blank"><button class="apply-btn portal">🌐 Apply on Portal →</button></a>`;
     }
-    return `<div class="job">
+    const badge = j.post_type === 'admin' 
+  ? `<span class="admin-badge">✅ Sebenta Verified • From Facebook</span>` 
+  : `<span class="employer-badge">Posted by Employer</span>`;
+const imgHtml = j.image_url ? `<img src="${j.image_url}" class="job-img">` : '';
+
+return `<div class="job">
+  ${imgHtml}
+  <b>${j.title} ${badge}</b>
       <b>${j.title}${j.is_verified ? '<span style="background:#28a745;color:white;padding:3px 8px;border-radius:10px;font-size:12px;">✅ VERIFIED</span>' : '<span style="background:#ffc107;padding:3px 8px;border-radius:10px;font-size:12px;">⏳ Not Verified</span>'}</b>
       <small>${j.company} • ${j.location}</small>
       <span class="tag">${j.level}</span> <span class="tag">${j.salary || 'Salary to discuss'}</span>
       <small style="margin-top:8px">📅 Deadline: ${j.deadline || 'Not set'} ${j.start_date ? '• Start: '+j.start_date : ''}</small>
       <p style="font-size:14px;color:#333;margin:10px 0;">${j.description || ''}</p>
+      ${j.facebook_link ? `<a href="${j.facebook_link}" target="_blank" style="color:#1877F2;font-size:13px;font-weight:700;">📘 View on Facebook Page →</a>` : ''}
       ${applyBtn}
       <button onclick="reportJob(${j.id}, '${j.title.replace(/'/g,"")}')" style="width:100%;margin-top:8px;background:none;border:none;color:#dc3545;font-size:13px;cursor:pointer;padding:8px">⚠️ Report this job - Scam / Fake</button>
       <button onclick="deleteJob(${j.id})" style="width:100%;margin-top:8px;background:none;border:none;color:#666;font-size:13px;cursor:pointer;padding:8px">🗑️ Delete Job</button>
@@ -624,6 +678,79 @@ async function rejectApplication(appId, jobId, jobTitle){
   // Simplest: just reload the list by closing and asking again is annoying, so we reload page view manually:
   // For now, just show alert and refresh list by re-calling with code stored
   location.reload();
+}
+
+// ===== ADMIN SYSTEM =====
+let adminPhotoFile = null;
+
+function toggleAdmin(){
+  const pass = prompt("Admin Password:");
+  // CHANGE THIS to your own secret
+  if(pass === "sebenta2026"){
+    const f = document.getElementById('adminForm');
+    f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    f.scrollIntoView({behavior:'smooth'});
+  } else if(pass) alert("Wrong password");
+}
+
+function previewAdminPhoto(e){
+  adminPhotoFile = e.target.files[0];
+  const img = document.getElementById('adminPreview');
+  img.src = URL.createObjectURL(adminPhotoFile);
+  img.style.display = 'block';
+}
+
+async function uploadPhoto(file){
+  const fileName = Date.now() + '-' + file.name.replace(/\s/g,'');
+  const { error } = await supabaseClient.storage.from('job-photos').upload(fileName, file);
+  if(error) throw error;
+  const { data } = supabaseClient.storage.from('job-photos').getPublicUrl(fileName);
+  return data.publicUrl;
+}
+
+async function postAdminJob(){
+  const title = document.getElementById('adminTitle').value.trim();
+  const company = document.getElementById('adminCompany').value.trim() || 'Sebenta Jobs';
+  const location = document.getElementById('adminLocation').value;
+  const caption = document.getElementById('adminCaption').value.trim();
+  const fbLink = document.getElementById('adminFBLink').value.trim();
+  const deadline = document.getElementById('adminDeadline').value || null;
+
+  if(!title || !caption) return alert("Need Title + Caption");
+  if(!adminPhotoFile) return alert("Upload a photo first - Facebook style needs a photo");
+
+  document.getElementById('adminStatus').textContent = 'Uploading photo...';
+  try{
+    const image_url = await uploadPhoto(adminPhotoFile);
+    const { error } = await supabaseClient.from('jobs').insert([{
+      title, company, location, deadline,
+      description: caption,
+      caption: caption,
+      image_url: image_url,
+      facebook_link: fbLink,
+      post_type: 'admin',
+      source: 'facebook',
+      is_approved: true,
+      is_verified: true,
+      contact_method: 'portal',
+      portal_link: fbLink || 'https://www.facebook.com/',
+      level: 'See caption',
+      delete_code: '0000'
+    }]);
+    if(error) throw error;
+
+    // Show copy for Facebook
+    document.getElementById('fbCopyBox').style.display = 'block';
+    document.getElementById('fbCopyText').innerText = `${title}\n📍 ${location}\n\n${caption}\n\n👉 Apply in App: https://sebenta-jobs.onrender.com/\n⚠️ NEVER pay for a job.`;
+    document.getElementById('adminStatus').textContent = '✅ Posted! Now copy caption to Facebook.';
+    loadJobs();
+  }catch(e){ alert("Error: " + e.message); }
+}
+
+function copyFBText(){
+  const txt = document.getElementById('fbCopyText').innerText;
+  navigator.clipboard.writeText(txt);
+  alert("Copied! Now paste on Facebook Page.");
 }
   </script>
  
