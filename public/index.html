@@ -263,6 +263,22 @@ async function deleteJob(jobId){
   }
 }
 
+function openPhoto(url, title){
+  document.getElementById('photoModalImg').src = url;
+  document.getElementById('photoModalTitle').innerText = title || '';
+  document.getElementById('photoModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closePhoto(e){
+  // Only close if they tapped background, not the image itself
+  if(e.target.id === 'photoModal') closePhotoBtn();
+}
+function closePhotoBtn(){
+  document.getElementById('photoModal').classList.remove('open');
+  document.getElementById('photoModalImg').src = '';
+  document.body.style.overflow = '';
+}
+
 function renderJobs(){
   const q = document.getElementById('searchInput').value.toLowerCase();
   const list = document.getElementById('jobsList');
@@ -287,8 +303,7 @@ function renderJobs(){
     const badge = j.post_type === 'admin' 
   ? `<span class="admin-badge">✅ </span>` 
   : `<span class="employer-badge"></span>`;
-const imgHtml = j.image_url ? `<img src="${j.image_url}" class="job-img">` : '';
-
+const imgHtml = j.image_url ? `<img src="${j.image_url}" class="job-img" onclick="openPhoto('${j.image_url}', '${(j.title||'').replace(/'/g,"")}')">` : '';
 return `<div class="job">
   ${imgHtml}
   <b>${j.title} ${badge}</b>
@@ -313,6 +328,8 @@ function cleanPhone(raw){
   if(p.startsWith('00268')) p = p.slice(5);
   return p;
 }
+
+
 
 function isValidEswatiniPhone(raw){
   const p = cleanPhone(raw);
@@ -757,6 +774,12 @@ function copyFBText(){
 }
   </script>
  
-
+<!-- PHOTO VIEWER -->
+<div id="photoModal" onclick="closePhoto(event)">
+  <button onclick="closePhotoBtn()" style="position:absolute;top:16px;right:16px;background:#fff;border:none;width:40px;height:40px;border-radius:50%;font-size:20px;font-weight:900;cursor:pointer;">✕</button>
+  <img id="photoModalImg" src="">
+  <p id="photoModalTitle" style="color:#fff;font-weight:700;margin:12px 0 0;text-align:center;"></p>
+  <p style="color:#aaa;font-size:13px;margin:4px 0;">Tap anywhere to close • Pinch to zoom</p>
+</div>
 </body>
 </html>
