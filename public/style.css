@@ -82,8 +82,7 @@ section h3 { font-size: 18px; margin-bottom: 12px; }
 .footer-bottom img { width: 55px; background: white; padding: 4px 6px; border-radius: 6px; margin-top: 10px; }
 
 .apply-btn { display:block; text-align:center; padding:12px; border-radius:12px; color:white !important; font-weight:700; text-decoration:none; margin-top:10px; font-size:14px; }
-.job{overflow:hidden} /* stops photo leaking outside card */
-.job-img{width:calc(100% + 32px);height:220px;object-fit:cover;display:block;margin:-16px -16px 12px -16px;cursor:zoom-in;max-width:none}
+.job{overflow:hidden}
+.job-img{width:100% !important;height:220px !important;object-fit:cover !important;display:block !important;border-radius:12px;margin:0 0 12px 0 !important;max-width:100% !important}
 .admin-badge{background:#111;color:#fff;padding:3px 8px;border-radius:10px;font-size:12px}
 .employer-badge{background:#eaf4ff;color:#007bff;padding:3px 8px;border-radius:10px;font-size:12px}
-
